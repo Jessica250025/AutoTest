@@ -1,8 +1,12 @@
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.net.URL;
  
@@ -20,22 +24,27 @@ public class AutoTest{
 		 
 		WebDriver driver = new RemoteWebDriver(new URL(URL), caps);
  
-	    //Launch the Paypal Website
+		//Launch the Paypal Website
 		driver.get("https://www.paypal.com/");
+		
 		// print a log of page title
 		String Title = driver.getTitle();
-		System.out.println("Successfully opened" + Title);
-	
-		Thread.sleep(500);  
-	  
+		System.out.println("Successfully opened: " + Title);
+		  
 		// Go to log in page
-		WebElement logInElem = driver.findElement(By.id("ul-btn"));
-		logInElem.click();
-	
-		// Type in email
-		WebElement element = driver.findElement(By.name("login_email"));  
+		driver.findElement(By.id("ul-btn")).click();
 		System.out.println("access login page...");
+	    ExpectedCondition<Boolean> pageLoadCondition = new
+	            ExpectedCondition<Boolean>() {
+	                public Boolean apply(WebDriver driver) {
+	                    return ((JavascriptExecutor)driver).executeScript("return document.readyState").equals("complete");
+	                }
+	            };
+	    WebDriverWait wait = new WebDriverWait(driver, 30);
+	    wait.until(pageLoadCondition);
 		
+	    // Type in email
+		WebElement element = driver.findElement(By.name("login_email"));  
 		element.sendKeys("ABCD_abcd");  
 		System.out.println("input user name...");  
 		
@@ -45,11 +54,16 @@ public class AutoTest{
 		System.out.println("input password");  
 		
 		// login
-		Thread.sleep(500); 
 		driver.findElement(By.id("btnLogin")).click();
 		System.out.println("Loging in...");
-		  
-		Thread.sleep(500);  // Let the user actually see something!
+ 
+        // Wait for notifications to be present
+        element = wait.until(
+        	    ExpectedConditions.visibilityOfElementLocated(By.id("notifications")));
+		String alertText = element.getText();
+		System.out.println("Notification text: " + alertText);
+		
 		driver.quit();
+
   	}
 }
